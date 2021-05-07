@@ -15,13 +15,19 @@ class App {
         app.use(express.static(path.join(__dirname, '../client')))
         app.use('/build/three.module.js', express.static(path.join(__dirname, '../../node_modules/three/build/three.module.js')))
         app.use('/jsm/controls/OrbitControls', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/controls/OrbitControls.js')))
+        app.use('/jsm/loaders/FBXLoader', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/loaders/FBXLoader.js')))
+        app.use('/jsm/libs/inflate.module.min.js', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/libs/inflate.module.min.js')))
+        app.use('/jsm/curves/NURBSCurve.js', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/curves/NURBSCurve.js')))
+        app.use('/jsm/curves/NURBSUtils.js', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/curves/NURBSUtils.js')))
+        app.use('/jsm/libs/stats.module', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/libs/stats.module.js')))
+        app.use('/jsm/libs/fflate.module.min.js', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/libs/fflate.module.min.js')))
 
         this.server = new http.Server(app);
     }
 
     public Start() {
         this.server.listen(this.port, () => {
-            console.log( `Server listening on port ${this.port}.` )
+            console.log(`Server listening on port ${this.port}.`)
         })
     }
 }
