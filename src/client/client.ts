@@ -4,20 +4,31 @@ import { FBXLoader } from '/jsm/loaders/FBXLoader'
 
 
 const scene: THREE.Scene = new THREE.Scene()
-
+scene.background = new THREE.Color( 0x00a0f0 );
 const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
 
+var light = new THREE.AmbientLight(0xaaaaaa)
 
-let light = new THREE.PointLight();
-light.position.set(0.8, 1.4, 1.0)
 scene.add(light);
 
-let ambientLight = new THREE.AmbientLight();
-scene.add(ambientLight);
+scene.fog = new THREE.Fog(0xa0a0a0, 700, 1800);
 
-const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-camera.position.set(0.8, 1.4, 5.0)
+//ground
+var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(4000,4000),new THREE.MeshPhongMaterial({color: 0x999999, depthWrite: false }));
+mesh.rotation.x = Math.PI/2;
+mesh.receiveShadow = true;
+scene.add(mesh);
+
+
+var grid = new THREE.GridHelper( 4000, 60, 0x000000, 0x000000 );
+//grid.position.y = -100;
+grid.material.opacity = 0.2;
+grid.material.transparent = true;
+scene.add(grid);
+
+const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 10, 20000)
+camera.position.set(200, 400, 500)
 
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
@@ -27,34 +38,87 @@ const controls = new OrbitControls(camera, renderer.domElement)
 controls.screenSpacePanning = true
 controls.target.set(0, 1, 0)
 
-const material: THREE.MeshNormalMaterial = new THREE.MeshNormalMaterial()
-let mixer : THREE.AnimationMixer;
-let model: THREE.Object3D;
+let mixer: THREE.AnimationMixer
 let modelReady = false;
-let animationActions: THREE.AnimationAction[] = new Array();
-let activeAction: THREE.AnimationAction;
-
+let animationActions: THREE.AnimationAction[] = new Array()
+let activeAction: THREE.AnimationAction
+let lastAction: THREE.AnimationAction
 const fbxLoader: FBXLoader = new FBXLoader();
+
 fbxLoader.load(
     'assets/fbx/people/FireFighter.fbx',
     (object) => {
-        object.traverse(function (child) {
-            if ((<THREE.Mesh>child).isMesh) {
-                (<THREE.Mesh>child).material = material
-                if ((<THREE.Mesh>child).material) {
-                    ((<THREE.Mesh>child).material as THREE.MeshBasicMaterial).transparent = false
-                }
-            }
-        })
-        object.scale.set(.01, .01, .01)
-
+       // object.scale.set(.01, .01, .01)
         mixer = new THREE.AnimationMixer(object);
+
         let animationAction = mixer.clipAction((object as any).animations[0]);
-        animationActions.push(animationAction);
+        animationActions.push(animationAction)
         activeAction = animationActions[0];
-        model = object;
+        modelReady = true;
+        activeAction.play();
 
         scene.add(object);
+        const tLoader = new THREE.TextureLoader();
+        tLoader.load('assets/images/SimplePeople_FireFighter_White.png',(texture)=>{
+            object.traverse((child)=>{
+                if((child as THREE.Mesh).isMesh){
+                    ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).map = texture;
+                }
+            })
+        })
+
+        //add an animation from another file
+        // fbxLoader.load('models/vanguard@samba.fbx',
+        //     (object) => {
+        //         console.log("loaded samba")
+
+        //         let animationAction = mixer.clipAction((object as any).animations[0]);
+        //         animationActions.push(animationAction)         
+        //         animationsFolder.add(animations, "samba")
+
+        //         //add an animation from another file
+        //         fbxLoader.load('models/vanguard@bellydance.fbx',
+        //             (object) => {
+        //                 console.log("loaded bellydance")
+        //                 let animationAction = mixer.clipAction((object as any).animations[0]);
+        //                 animationActions.push(animationAction)
+        //                 animationsFolder.add(animations, "bellydance")
+
+        //                 //add an animation from another file
+        //                 fbxLoader.load('models/vanguard@goofyrunning.fbx',
+        //                     (object) => {
+        //                         console.log("loaded goofyrunning");
+        //                         (object as any).animations[0].tracks.shift() //delete the specific track that moves the object forward while running
+        //                         //console.dir((object as any).animations[0])
+        //                         let animationAction = mixer.clipAction((object as any).animations[0]);
+        //                         animationActions.push(animationAction)
+        //                         animationsFolder.add(animations, "goofyrunning")
+
+        //                         modelReady = true
+        //                     },
+        //                     (xhr) => {
+        //                         console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+        //                     },
+        //                     (error) => {
+        //                         console.log(error);
+        //                     }
+        //                 )
+        //             },
+        //             (xhr) => {
+        //                 console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+        //             },
+        //             (error) => {
+        //                 console.log(error);
+        //             }
+        //         )
+        //     },
+        //     (xhr) => {
+        //         console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+        //     },
+        //     (error) => {
+        //         console.log(error);
+        //     }
+        // )
     },
     (xhr) => {
         console.log((xhr.loaded / xhr.total * 100) + '% loaded')
@@ -73,13 +137,35 @@ function onWindowResize() {
 }
 
 
+var animations = {
+    default: function () {
+        setAction(animationActions[0])
+    }
+}
+
+const setAction = (toAction: THREE.AnimationAction) => {
+    if (toAction != activeAction) {
+        lastAction = activeAction
+        activeAction = toAction
+        lastAction.stop()
+        //lastAction.fadeOut(1)
+        activeAction.reset()
+        //activeAction.fadeIn(1)
+        activeAction.play()
+    }
+}
+
+
+const clock: THREE.Clock = new THREE.Clock()
+
 var animate = function () {
     requestAnimationFrame(animate)
 
     controls.update()
 
-    render()
+    if (modelReady) mixer.update(clock.getDelta());
 
+    render()
 
 };
 
