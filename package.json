@@ -2,10 +2,10 @@
   "name": "provoBlocklandConTypescript",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev" : "concurrently -k \"tsc -p ./src/client -w\" \"tsc -p ./src/server -w\" \"nodemon ./dist/server/server.js\""
+    "dev" : "concurrently -k \"tsc -p ./src -w\" \"tsc -p ./src/server -w\" \"nodemon ./dist/server/server.js\""
   },
   "keywords": [],
   "author": "",

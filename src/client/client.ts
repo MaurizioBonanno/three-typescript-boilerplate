@@ -23,11 +23,11 @@ scene.add(mesh);
 
 var grid = new THREE.GridHelper( 4000, 60, 0x000000, 0x000000 );
 //grid.position.y = -100;
-grid.material.opacity = 0.2;
-grid.material.transparent = true;
+// grid.material.opacity = 0.2;
+// grid.material.transparent = true;
 scene.add(grid);
 
-const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 10, 20000)
+const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 20000)
 camera.position.set(200, 400, 500)
 
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
