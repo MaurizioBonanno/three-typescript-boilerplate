@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "build": "webpack --config webpack.config.js", 
-    "dev": "concurrently -k \"tsc -p ./src -w\" \"tsc -p ./src/server -w\" \"nodemon ./dist/server/server.js\""
+    "dev": "concurrently -k \"tsc -p ./src -w\" \"tsc -p ./src/server -w\" \"nodemon ./dist/server/server.js\"",
+    "serve": "concurrently -k \"tsc -p ./src/server -w\" \"nodemon ./dist/server/server.js\"",
+    "startbuild":""
   },
   "keywords": [],
   "author": "",

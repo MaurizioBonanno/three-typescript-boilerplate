@@ -1,6 +1,6 @@
-import * as THREE from '/build/three.module.js'
-import { OrbitControls } from '/jsm/controls/OrbitControls';
-import { FBXLoader } from '/jsm/loaders/FBXLoader';
+import * as THREE from 'three'
+import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/OrbitControls';
+import { FBXLoader } from '../../node_modules/three/examples/jsm/loaders/FBXLoader';
 
 interface animable{
   animate();
