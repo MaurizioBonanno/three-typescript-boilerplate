@@ -17,7 +17,6 @@ class Action {
 
 class Human implements animable{
     fbxLoader: FBXLoader;
-    object: any;
     mixer: THREE.AnimationMixer;
     animationActions: Action[] = new Array();
     modelReady = false;
@@ -26,7 +25,7 @@ class Human implements animable{
     constructor(scene: Scena,pathModel: string,pathTexture: string){
         this.fbxLoader = new FBXLoader();
         this.fbxLoader.load(pathModel,(object3D)=>{
-            this.object = object3D;
+            object3D.name = 'Pompiere';
             scene.add(object3D);
 
             this.mixer = new THREE.AnimationMixer(object3D);
@@ -119,6 +118,7 @@ class Renderer extends THREE.WebGLRenderer{
     constructor(){
         super();
         this.setSize(window.innerWidth,window.innerHeight);
+        this.shadowMap.enabled = true;
     }
     addToPage(){
         document.body.appendChild(this.domElement);
