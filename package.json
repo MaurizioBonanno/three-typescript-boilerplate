@@ -7,7 +7,7 @@
     "build": "webpack --config webpack.config.js", 
     "dev": "concurrently -k \"tsc -p ./src -w\" \"tsc -p ./src/server -w\" \"nodemon ./dist/server/server.js\"",
     "serve": "concurrently -k \"tsc -p ./src/server -w\" \"nodemon ./dist/server/server.js\"",
-    "startbuild":""
+    "startbuild":"concurrently -k \"webpack --config webpack.config.js\" \" tsc -p ./src/server -w\" \"nodemon ./dist/server/server.js\""
   },
   "keywords": [],
   "author": "",
