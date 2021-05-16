@@ -1,46 +1,55 @@
-import * as THREE from 'three'
+
+import { AnimationAction, AnimationMixer, Clock, TextureLoader,Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, WebGLRenderer, AmbientLight, Color, Fog, GridHelper, PlaneBufferGeometry, MeshPhongMaterial } from 'three';
 import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from '../../node_modules/three/examples/jsm/loaders/FBXLoader';
 
+enum Actions {
+    Idle,
+    Walking,
+    Running
+}
 interface animable{
   animate();
 }
 
-class Action {
+/* class Action {
     name: string;
-    action: THREE.AnimationAction;
-    constructor(name: string, action: THREE.AnimationAction){
+    action: AnimationAction;
+    constructor(name: string, action: AnimationAction){
         this.name = name;
         this.action = action;
     }
-}
+} */
 
 class Human implements animable{
     fbxLoader: FBXLoader;
-    mixer: THREE.AnimationMixer;
-    animationActions: Action[] = new Array();
+    mixer: AnimationMixer;
+    animationActions: AnimationAction[]= new Array();
     modelReady = false;
-    activeAction: THREE.AnimationAction;
-    clock = new THREE.Clock();
+    activeAction: AnimationAction;
+    clock = new Clock();
     constructor(scene: Scena,pathModel: string,pathTexture: string){
         this.fbxLoader = new FBXLoader();
         this.fbxLoader.load(pathModel,(object3D)=>{
             object3D.name = 'Pompiere';
             scene.add(object3D);
 
-            this.mixer = new THREE.AnimationMixer(object3D);
+            this.mixer = new AnimationMixer(object3D);
             let aAction = this.mixer.clipAction((object3D as any).animations[0]);
-            this.animationActions.push(new Action('idle',aAction));
+            this.animationActions.push(aAction);
 
-            this.activeAction = this.animationActions[0].action;
+            this.addAnimation('./assets/fbx/anims/Walking.fbx');
+
+            this.activeAction = this.animationActions[0];
             this.activeAction.play();
 
-            const tLoader: THREE.TextureLoader = new THREE.TextureLoader();
+
+            const tLoader: TextureLoader = new TextureLoader();
             tLoader.load(pathTexture,
             (texture)=>{
                 object3D.traverse((child)=>{
                     if((child as THREE.Mesh).isMesh){
-                        ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).map = texture;
+                        ((child as Mesh).material as MeshBasicMaterial).map = texture;
                     }
                 })
             })
@@ -49,19 +58,36 @@ class Human implements animable{
             console.log((xhr.loaded / xhr.total * 100) + '% loaded');
             this.modelReady = true
          },
-        (error)=>{console.log('error')});
+        (error)=>{console.log(error)});
     }
 
-    addAnimation(pathAnimation: string,name: string){
-        this.fbxLoader.load(pathAnimation,(animation)=>{
+    addAnimation(pathAnimation: string){
+        this.fbxLoader.load(pathAnimation,(anim)=>{
+            console.log(`Carico ${pathAnimation}:${anim}`);
+            let aAction = this.mixer.clipAction((anim as any).animations[0]);
+            this.animationActions.push(aAction);
 
-            let animationAction = this.mixer.clipAction((animation as any).animations[0]);
-            this.animationActions.push(new Action(name,animationAction));
-
-        },(xhr)=>{},(error)=>{
+        },(xhr)=>{
+            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+        },(error)=>{
             console.log(error);
         });
     }
+
+// a questo metodo viene passato l'enum che contiene il nome dell'azione
+    setAction(action: Actions){
+        console.log(action);
+        if( this.activeAction !== this.animationActions[action]){
+            this.activeAction.time = 0;
+            this.mixer.stopAllAction();
+            this.activeAction = this.animationActions[action];
+            this.activeAction.time = Date.now();
+            this.activeAction.fadeIn(0.5);
+            this.activeAction.play();
+        }
+    }
+
+    
     animate() {
         var dt = this.clock.getDelta();
         if(this.modelReady){
@@ -73,15 +99,15 @@ class Human implements animable{
     }
 
 }
-class Camera extends THREE.PerspectiveCamera{
+class Camera extends PerspectiveCamera{
     constructor(){
         super(75, window.innerWidth / window.innerHeight, 10, 20000);
         this.position.set(200, 400, 500);
     }
 }
-class Ground extends THREE.Mesh{
+class Ground extends Mesh{
     constructor(){
-        super(new THREE.PlaneBufferGeometry(4000,4000),new THREE.MeshPhongMaterial({color: 0x999999, depthWrite: false }));
+        super(new PlaneBufferGeometry(4000,4000),new MeshPhongMaterial({color: 0x999999, depthWrite: false }));
         this.rotation.x = Math.PI/2;
         this.receiveShadow = true;   
     }
@@ -97,24 +123,24 @@ class OControl extends OrbitControls implements animable{
         this.update();
     }
 }
-class Scena extends THREE.Scene{
-    light : THREE.AmbientLight;
+class Scena extends Scene{
+    light : AmbientLight;
     ground: Ground;
     camera: Camera;
     constructor(){
         super();
-        this.background = new THREE.Color( 0x00a0f0 );
-        this.light = new THREE.AmbientLight(0xaaaaaa);
+        this.background = new Color( 0x00a0f0 );
+        this.light = new AmbientLight(0xaaaaaa);
         this.add(this.light);
-        this.fog = new THREE.Fog(0x00a0f0, 700, 1800);
+        this.fog = new Fog(0x00a0f0, 700, 1800);
         this.ground = new Ground();
         this.add(this.ground);
-        this.add(new THREE.GridHelper( 4000, 60, 0x000000, 0x000000 ));
+        this.add(new GridHelper( 4000, 60, 0x000000, 0x000000 ));
         this.camera = new Camera();
         this.add(this.camera);
     }
 }
-class Renderer extends THREE.WebGLRenderer{
+class Renderer extends WebGLRenderer{
     constructor(){
         super();
         this.setSize(window.innerWidth,window.innerHeight);
@@ -136,6 +162,8 @@ class Game {
         this.renderer = new Renderer();
         this.renderer.addToPage();
         this.player = new Human(this.scena, 'assets/fbx/people/FireFighter.fbx','assets/images/SimplePeople_FireFighter_White.png');
+/*         this.player.addAnimation('assets/fbx/anims/Walking.fbx','Walking');
+        this.player.addAnimation('assets/fbx/anims/Running.fbx','Running'); */
         this.animables.push(this.player);
     }
     render(){
@@ -146,12 +174,39 @@ class Game {
         this.animables.push(this.orbitControl);
     }
 
+    addKeyControl(){
+        document.onkeydown = (evt)=>{
+            console.log(evt.key);
+            switch(evt.key){
+                case "ArrowUp":
+                    console.log('avanti');
+                    this.player.setAction(Actions.Walking);
+                break;
+                case "ArrowDown":
+                    console.log('indietro');
+                break;
+                case "ArrowRight":
+                    console.log('destra');
+                break;
+                case "ArrowLeft":
+                    console.log('sinistra');
+                break;
+            }
+        }
+
+        document.onkeyup = (evt)=>{
+            this.player.setAction(Actions.Idle);
+        }
+
+    }
+
 }
 
 
 
 const game = new Game();
 game.addOrbitControls();
+game.addKeyControl();
 
 var animate = ()=>{
     requestAnimationFrame(animate);
