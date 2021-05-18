@@ -6,7 +6,8 @@ import { FBXLoader } from '../../node_modules/three/examples/jsm/loaders/FBXLoad
 enum Actions {
     Idle,
     Walking,
-    Running
+    Running,
+    Backwards
 }
 interface animable{
   animate();
@@ -39,6 +40,8 @@ class Human implements animable{
             this.animationActions.push(aAction);
 
             this.addAnimation('./assets/fbx/anims/Walking.fbx');
+            this.addAnimation('assets/fbx/anims/Running.fbx');
+            this.addAnimation('assets/fbx/anims/Walking Backwards.fbx');
 
             this.activeAction = this.animationActions[0];
             this.activeAction.play();
@@ -184,6 +187,7 @@ class Game {
                 break;
                 case "ArrowDown":
                     console.log('indietro');
+                    this.player.setAction(Actions.Backwards);
                 break;
                 case "ArrowRight":
                     console.log('destra');
