@@ -22,7 +22,7 @@ interface animable{
 
 
 class Human implements animable{ 
-    activeMovement: Movement;
+    activeMovement: Movement = Movement.Stand;
     fbxLoader: FBXLoader;
     mixer: AnimationMixer;
     animationActions: AnimationAction[]= new Array();
@@ -38,40 +38,6 @@ class Human implements animable{
         this.pathModel = pathModel;
         this.pathTexture = pathTexture;
         this.scena = scene;
-
-       // this.addModel();
-
-        /* this.fbxLoader.load(pathModel,(object3D)=>{
-            object3D.name = 'Pompiere';
-            scene.add(object3D);
-
-            this.mixer = new AnimationMixer(object3D);
-            let aAction = this.mixer.clipAction((object3D as any).animations[0]);
-            this.animationActions.push(aAction);
-
-            this.addAnimation('./assets/fbx/anims/Walking.fbx');
-            this.addAnimation('assets/fbx/anims/Running.fbx');
-            this.addAnimation('assets/fbx/anims/Walking Backwards.fbx');
-
-            this.activeAction = this.animationActions[0];
-            this.activeAction.play();
-
-
-            const tLoader: TextureLoader = new TextureLoader();
-            tLoader.load(pathTexture,
-            (texture)=>{
-                object3D.traverse((child)=>{
-                    if((child as THREE.Mesh).isMesh){
-                        ((child as Mesh).material as MeshBasicMaterial).map = texture;
-                    }
-                })
-            })
-
-        },(xhr)=>{
-            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            this.modelReady = true
-         },
-        (error)=>{console.log(error)}); */
     }
 
     addModel(){
@@ -136,6 +102,27 @@ class Human implements animable{
         }
     }
 
+    moveHuman(dt){
+        switch(this.activeMovement){
+            case Movement.Stand:
+                console.log('Movimento stand');
+            break;
+            case Movement.Forward:
+                console.log('Movimento avanti');
+                this.playerParent.translateZ(dt*150);
+            break;
+            case Movement.Back:
+                console.log('Movimento indietro');
+                this.playerParent.translateZ(-dt*50)
+            break;
+            case Movement.Right:
+                console.log('Movimneto a destra');
+            break;
+            case Movement.Left:
+                console.log('Movimento a sinistra');
+            break;
+        }
+    }
     
     animate() {
         var dt = this.clock.getDelta();
@@ -145,6 +132,7 @@ class Human implements animable{
             }
             
         }
+        this.moveHuman(dt);
     }
 
 }
@@ -156,7 +144,7 @@ deve essere usata per creare i giocatori on line
 */
 class Hero extends Human{
     //è l'oggetto genitore del modello 
-    playerParent = new Object3D(); 
+  //  playerParent = new Object3D(); 
 
     //un oggetto genitore per la camera
     front = new Object3D();
@@ -178,11 +166,11 @@ class Hero extends Human{
     createCameras(){
         const offSet = new Vector3(0, 80 ,0);
         this.front = new Object3D();
-        this.front.position.set(112, 500, 600);
+        this.front.position.set(0, 500, 600);
         this.front.parent = this.playerParent;
 
         this.back = new Object3D();
-        this.back.position.set(0, 500, -700);
+        this.back.position.set(0, 500, -600);
         this.back.parent = this.playerParent;
 
         this.setActiveCamera(this.back);
@@ -203,14 +191,16 @@ class Hero extends Human{
             }
             
         }
+        this.moveHuman(dt);
+
         if(this.activeCamera != undefined){
             this.scena.camera.position.lerp(this.activeCamera.getWorldPosition(new Vector3()),0.05);
-            const pos = this.playerParent.position.clone();
+            let pos = this.playerParent.position.clone();
             pos.y += 200;
             this.scena.camera.lookAt(pos);
-        }else{
-            console.log('camera attiva non definita');
         }
+
+        
     }
 }
 
