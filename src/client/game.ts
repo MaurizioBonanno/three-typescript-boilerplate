@@ -117,9 +117,11 @@ class Human implements animable{
             break;
             case Movement.Right:
                 console.log('Movimneto a destra');
+                this.playerParent.rotateY(-0.5*dt)
             break;
             case Movement.Left:
                 console.log('Movimento a sinistra');
+                this.playerParent.rotateY(0.5*dt);
             break;
         }
     }
@@ -191,12 +193,14 @@ class Hero extends Human{
             }
             
         }
+
         this.moveHuman(dt);
 
         if(this.activeCamera != undefined){
             this.scena.camera.position.lerp(this.activeCamera.getWorldPosition(new Vector3()),0.05);
             let pos = this.playerParent.position.clone();
-            pos.y += 200;
+             pos.y += 200;
+             console.log(`X: ${pos.x},Y:${pos.y},Z:${pos.z}`);
             this.scena.camera.lookAt(pos);
         }
 
@@ -323,7 +327,9 @@ class Game {
 
 
 const game = new Game();
-game.addOrbitControls();
+//orbitControl e keyControl insieme collidono 
+//quindi elimino OrbitControls
+//game.addOrbitControls(); 
 game.addKeyControl();
 
 var animate = ()=>{
