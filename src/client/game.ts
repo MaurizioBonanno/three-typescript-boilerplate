@@ -1,7 +1,9 @@
 
+import { Raycaster } from 'three';
 import { AnimationAction, AnimationMixer, Clock, TextureLoader,Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, WebGLRenderer, AmbientLight, Color, Fog, GridHelper, PlaneBufferGeometry, MeshPhongMaterial, Vector3, Object3D } from 'three';
 import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from '../../node_modules/three/examples/jsm/loaders/FBXLoader';
+import Town from './town';
 
 enum Actions {
     Idle,
@@ -145,9 +147,9 @@ del giocatore che sta giocando sul suo client, mentre la classe Human o altra cl
 deve essere usata per creare i giocatori on line
 */
 class Hero extends Human{
-    //è l'oggetto genitore del modello 
-  //  playerParent = new Object3D(); 
 
+    //un boolean controlla che l'Eroe non sia bloccato se è bloccato si ferma
+    blocked: boolean;
     //un oggetto genitore per la camera
     front = new Object3D();
     //altro oggetto genitore per la camera
@@ -160,8 +162,6 @@ class Hero extends Human{
         super(scene,pathModel,pathTexture);
         this.createCameras();
     }
-
-    //aggiunge un modello fbx con texture alla classe
 
 
     //crea gli oggetti 3D genitori della camera
@@ -194,7 +194,11 @@ class Hero extends Human{
             
         }
 
-        this.moveHuman(dt);
+        //se non è bloccato si muove
+        if(!this.blocked){
+            this.moveHuman(dt);
+        }
+        
 
         if(this.activeCamera != undefined){
             this.scena.camera.position.lerp(this.activeCamera.getWorldPosition(new Vector3()),0.05);
@@ -271,16 +275,23 @@ class Game {
     orbitControl: OControl;
     animables: animable[] = new Array();
     player: Hero;
+    town: Town;
     constructor(){
         console.log('new game');
         this.scena = new Scena();
         this.renderer = new Renderer();
         this.renderer.addToPage();
+
+        //creo una serie di box è una città molto semplice
+        this.town = new Town(this.scena);
+        this.town.createBoxTown();
+
+        //creo il protagonista del gioco
         this.player = new Hero(this.scena, 'assets/fbx/people/FireFighter.fbx','assets/images/SimplePeople_FireFighter_White.png');
-/*         this.player.addAnimation('assets/fbx/anims/Walking.fbx','Walking');
-        this.player.addAnimation('assets/fbx/anims/Running.fbx','Running'); */
         this.player.addModel();
         this.animables.push(this.player);
+
+
     }
     render(){
         this.renderer.render(this.scena,this.scena.camera);
@@ -337,6 +348,24 @@ var animate = ()=>{
     game.animables.forEach(element => {
         element.animate();
     });
+    // controllo se l'eroe collide con un edificio se collide lo blocco
+    //recupero la posizione dell'eroe e la clono
+    const pos = game.player.playerParent.position.clone();
+    pos.y += 60; // prendo 60 unità in avanti
+    let dir =new Vector3();
+    game.player.playerParent.getWorldDirection(dir);//recupero le coordinate della direzione
+     if(game.player.activeMovement === Movement.Back) dir.negate();
+    //costruisco un raycaster
+    let raycaster = new Raycaster(pos,dir);
+    game.player.blocked = false;
+    if(game.town.colliders !== undefined){
+        const intersect = raycaster.intersectObjects(game.town.colliders);
+        if(intersect.length>0){
+            if(intersect[0].distance<100) game.player.blocked = true;
+        }
+    }
+    //fine del codice di controllo delle collisioni
+
     game.render()
 }
 animate();
