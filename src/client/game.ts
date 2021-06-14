@@ -1,4 +1,5 @@
 
+import { Client } from './client';
 import { Raycaster } from 'three';
 import { AnimationAction, AnimationMixer, Clock, TextureLoader,Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, WebGLRenderer, AmbientLight, Color, Fog, GridHelper, PlaneBufferGeometry, MeshPhongMaterial, Vector3, Object3D } from 'three';
 import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/OrbitControls';
@@ -22,6 +23,12 @@ interface animable{
   animate();
 }
 
+/* class Client {
+    private socket: any;
+    constructor(){
+        this.socket = io();
+    }
+} */
 
 class Human implements animable{ 
     activeMovement: Movement = Movement.Stand;
@@ -236,7 +243,7 @@ class OControl extends OrbitControls implements animable{
         this.update();
     }
 }
-class Scena extends Scene{
+export class Scena extends Scene{
     light : AmbientLight;
     ground: Ground;
     camera: Camera;
@@ -276,6 +283,7 @@ class Game {
     animables: animable[] = new Array();
     player: Hero;
     town: Town;
+    client: Client;
     constructor(){
         console.log('new game');
         this.scena = new Scena();
@@ -290,6 +298,9 @@ class Game {
         this.player = new Hero(this.scena, 'assets/fbx/people/FireFighter.fbx','assets/images/SimplePeople_FireFighter_White.png');
         this.player.addModel();
         this.animables.push(this.player);
+
+        //creo un client socket
+        this.client = new Client();
 
 
     }
@@ -348,6 +359,7 @@ var animate = ()=>{
     game.animables.forEach(element => {
         element.animate();
     });
+
     // controllo se l'eroe collide con un edificio se collide lo blocco
     //recupero la posizione dell'eroe e la clono
     const pos = game.player.playerParent.position.clone();
@@ -358,10 +370,42 @@ var animate = ()=>{
     //costruisco un raycaster
     let raycaster = new Raycaster(pos,dir);
     game.player.blocked = false;
+    // raycast in avanti
     if(game.town.colliders !== undefined){
-        const intersect = raycaster.intersectObjects(game.town.colliders);
+        let intersect = raycaster.intersectObjects(game.town.colliders);
         if(intersect.length>0){
             if(intersect[0].distance<100) game.player.blocked = true;
+        }
+    }
+
+    //raycast in basso 
+    dir.set(0, -1, 0);
+    pos.y += 200;
+    raycaster = new Raycaster(pos, dir);
+    const gravity = 30;
+    let intersect = raycaster.intersectObjects(game.town.colliders);
+    if(intersect.length>0){
+        const targetY = pos.y - intersect[0].distance;
+        if(targetY > game.player.playerParent.position.y){
+            //va in su
+            game.player.playerParent.position.y = 0.8*game.player.playerParent.position.y + 0.2*targetY;
+
+        }else if(targetY < game.player.playerParent.position.y){
+            let velocityY = 0;
+            velocityY +=game.player.clock.getDelta()* gravity;
+            game.player.playerParent.position.y -= velocityY;
+            if(game.player.playerParent.position.y < targetY){
+                velocityY = 0;
+                game.player.playerParent.position.y = targetY;
+            }
+        }
+    }else if(game.player.playerParent.position.y > 0){
+        let velocity = 0;
+        velocity += game.player.clock.getDelta()*gravity;
+        game.player.playerParent.position.y = -velocity;
+        if(game.player.playerParent.position.y < 0){
+            velocity = 0;
+            game.player.playerParent.position.y = 0;
         }
     }
     //fine del codice di controllo delle collisioni

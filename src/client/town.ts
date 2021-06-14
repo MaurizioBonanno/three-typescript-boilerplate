@@ -1,6 +1,6 @@
 
+import { Scena } from 'game';
 import { BoxGeometry, MeshBasicMaterial,Mesh } from 'three';
-import Scena from './scena';
 export default class Town{
    scena: Scena;
    colliders = []

@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  mode: 'development',
+  mode: 'production',
   watch: true,
   entry: './src/client/game.ts',
   module: {

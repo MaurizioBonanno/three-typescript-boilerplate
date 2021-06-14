@@ -2,6 +2,7 @@
 import express from "express"
 import path from "path"
 import http from "http"
+import socketIO from 'socket.io';
 
 const port: number = 3000
 
@@ -22,7 +23,15 @@ class App {
         app.use('/jsm/libs/stats.module', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/libs/stats.module.js')))
         app.use('/jsm/libs/fflate.module.min.js', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/libs/fflate.module.min.js')))
 
+        app.get('/',(req,res)=>{
+            res.sendFile(__dirname+'../client/index.html');
+        })
         this.server = new http.Server(app);
+        const io = new socketIO.Server(this.server);
+
+        io.sockets.on('connection',(socket)=>{
+            console.log(`socket : ${socket.id}, è connesso`);
+        })
     }
 
     public Start() {

@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const path_1 = __importDefault(require("path"));
 const http_1 = __importDefault(require("http"));
+const socket_io_1 = __importDefault(require("socket.io"));
 const port = 3000;
 class App {
     constructor(port) {
@@ -20,7 +21,14 @@ class App {
         app.use('/jsm/curves/NURBSUtils.js', express_1.default.static(path_1.default.join(__dirname, '../../node_modules/three/examples/jsm/curves/NURBSUtils.js')));
         app.use('/jsm/libs/stats.module', express_1.default.static(path_1.default.join(__dirname, '../../node_modules/three/examples/jsm/libs/stats.module.js')));
         app.use('/jsm/libs/fflate.module.min.js', express_1.default.static(path_1.default.join(__dirname, '../../node_modules/three/examples/jsm/libs/fflate.module.min.js')));
+        app.get('/', (req, res) => {
+            res.sendFile(__dirname + '../client/index.html');
+        });
         this.server = new http_1.default.Server(app);
+        const io = new socket_io_1.default.Server(this.server);
+        io.sockets.on('connection', (socket) => {
+            console.log(`socket : ${socket.id}, è connesso`);
+        });
     }
     Start() {
         this.server.listen(this.port, () => {
