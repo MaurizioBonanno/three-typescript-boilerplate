@@ -42,7 +42,7 @@ class App {
             socket.emit('setId', { id: socket.id, userData: socket.userData });
             socket.on('init', (data) => {
                 socket.userData.model = data.model;
-                socket.userData.color = data.color;
+                socket.userData.color = data.colour;
                 socket.userData.x = data.x;
                 socket.userData.y = data.y;
                 socket.userData.heading = data.h;
@@ -50,13 +50,14 @@ class App {
                 socket.userData.action = Actions.Idle;
             });
             socket.on('update', (data) => {
-                socket.userData.model = data.model;
+                /* socket.userData.model = data.model;
                 socket.userData.color = data.color;
                 socket.userData.x = data.x;
                 socket.userData.y = data.y;
                 socket.userData.heading = data.h;
                 socket.userData.pb = data.pb;
-                socket.userData.action = data.action;
+                socket.userData.action = data.action; */
+                console.log(`aggiorno i dati`);
             });
             socket.on('chat message', (data) => {
                 console.log(`chat message ${data.id}: ${data.message}`);

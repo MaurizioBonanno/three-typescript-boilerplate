@@ -37,7 +37,14 @@ class Human implements animable{
     scena: Scena;
     playerParent = new Object3D();
     id;
+    deleted = false;
+    model;
+    colour;
+    colours = ['Black', 'Brown', 'White'];
+    people = ['BeachBabe', 'BusinessMan', 'Doctor', 'FireFighter', 'Housewife', 'Policeman', 'Prostitute', 'Punk', 'RiotCop', 'Roadworker', 'Robber', 'Sheriff', 'Streetman', 'Waitress'];
     constructor(scene: Scena,pathModel: string,pathTexture: string){
+        this.colour = this.colours[Math.floor(Math.random()*this.colours.length)];
+        this.model = this.people[Math.floor(Math.random()*this.people.length)];
         this.fbxLoader = new FBXLoader();
         this.pathModel = pathModel;
         this.pathTexture = pathTexture;
@@ -166,6 +173,7 @@ export class Hero extends Human{
         super(scene,pathModel,pathTexture);
         this.createCameras();
         this.client = new Client(this);
+       // this.client.initSocket();
         this.game = game;
     }
 
@@ -214,8 +222,9 @@ export class Hero extends Human{
             this.scena.camera.lookAt(pos);
         }
 
+        this.client.updateSocket();
         
-    }
+    }//fine del metodo animate
 }
 
 class Camera extends PerspectiveCamera{
@@ -284,6 +293,8 @@ class Game {
     town: Town;
     client: Client;
     remoteData = [];// un array che deve essere sincronizzato con il server
+    remotePlayers = [];
+    initialisingPlayers = [];
     constructor(){
         console.log('new game');
         this.scena = new Scena();
