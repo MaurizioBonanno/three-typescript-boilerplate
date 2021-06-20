@@ -6,7 +6,7 @@ import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/Or
 import { FBXLoader } from '../../node_modules/three/examples/jsm/loaders/FBXLoader';
 import Town from './town';
 
-enum Actions {
+export enum Actions {
     Idle,
     Walking,
     Running,
@@ -23,12 +23,6 @@ interface animable{
   animate();
 }
 
-/* class Client {
-    private socket: any;
-    constructor(){
-        this.socket = io();
-    }
-} */
 
 class Human implements animable{ 
     activeMovement: Movement = Movement.Stand;
@@ -42,6 +36,7 @@ class Human implements animable{
     pathTexture;
     scena: Scena;
     playerParent = new Object3D();
+    id;
     constructor(scene: Scena,pathModel: string,pathTexture: string){
         this.fbxLoader = new FBXLoader();
         this.pathModel = pathModel;
@@ -100,7 +95,7 @@ class Human implements animable{
 
 // a questo metodo viene passato l'enum che contiene il nome dell'azione
     setAction(action: Actions){
-        console.log(action);
+        //console.log(action);
         if( this.activeAction !== this.animationActions[action]){
             this.activeAction.time = 0;
             this.mixer.stopAllAction();
@@ -114,22 +109,22 @@ class Human implements animable{
     moveHuman(dt){
         switch(this.activeMovement){
             case Movement.Stand:
-                console.log('Movimento stand');
+                //console.log('Movimento stand');
             break;
             case Movement.Forward:
-                console.log('Movimento avanti');
+              //  console.log('Movimento avanti');
                 this.playerParent.translateZ(dt*150);
             break;
             case Movement.Back:
-                console.log('Movimento indietro');
+              //  console.log('Movimento indietro');
                 this.playerParent.translateZ(-dt*50)
             break;
             case Movement.Right:
-                console.log('Movimneto a destra');
+              //  console.log('Movimneto a destra');
                 this.playerParent.rotateY(-0.5*dt)
             break;
             case Movement.Left:
-                console.log('Movimento a sinistra');
+              //  console.log('Movimento a sinistra');
                 this.playerParent.rotateY(0.5*dt);
             break;
         }
@@ -153,7 +148,7 @@ la classe Hero estende la classe base Human , la classe Hero è fatta per il Pla
 del giocatore che sta giocando sul suo client, mentre la classe Human o altra classe che la estende
 deve essere usata per creare i giocatori on line
 */
-class Hero extends Human{
+export class Hero extends Human{
 
     //un boolean controlla che l'Eroe non sia bloccato se è bloccato si ferma
     blocked: boolean;
@@ -164,10 +159,14 @@ class Hero extends Human{
 
     //l'oggetto genitore attivo della camera
     activeCamera: Object3D;
+    client: Client;
+    game: Game;
 
-    constructor(scene: Scena,pathModel: string,pathTexture: string){
+    constructor(scene: Scena,pathModel: string,pathTexture: string, game: Game){
         super(scene,pathModel,pathTexture);
         this.createCameras();
+        this.client = new Client(this);
+        this.game = game;
     }
 
 
@@ -211,7 +210,7 @@ class Hero extends Human{
             this.scena.camera.position.lerp(this.activeCamera.getWorldPosition(new Vector3()),0.05);
             let pos = this.playerParent.position.clone();
              pos.y += 200;
-             console.log(`X: ${pos.x},Y:${pos.y},Z:${pos.z}`);
+           //  console.log(`X: ${pos.x},Y:${pos.y},Z:${pos.z}`);
             this.scena.camera.lookAt(pos);
         }
 
@@ -284,6 +283,7 @@ class Game {
     player: Hero;
     town: Town;
     client: Client;
+    remoteData = [];// un array che deve essere sincronizzato con il server
     constructor(){
         console.log('new game');
         this.scena = new Scena();
@@ -295,12 +295,12 @@ class Game {
         this.town.createBoxTown();
 
         //creo il protagonista del gioco
-        this.player = new Hero(this.scena, 'assets/fbx/people/FireFighter.fbx','assets/images/SimplePeople_FireFighter_White.png');
+        this.player = new Hero(this.scena, 'assets/fbx/people/FireFighter.fbx','assets/images/SimplePeople_FireFighter_White.png', this);
         this.player.addModel();
         this.animables.push(this.player);
 
         //creo un client socket
-        this.client = new Client();
+       // this.client = new Client();
 
 
     }
@@ -314,24 +314,24 @@ class Game {
 
     addKeyControl(){
         document.onkeydown = (evt)=>{
-            console.log(evt.key);
+            //console.log(evt.key);
             switch(evt.key){
                 case "ArrowUp":
-                    console.log('avanti');
+                    //console.log('avanti');
                     this.player.setAction(Actions.Walking);
                     this.player.activeMovement = Movement.Forward;
                 break;
                 case "ArrowDown":
-                    console.log('indietro');
+                   // console.log('indietro');
                     this.player.setAction(Actions.Backwards);
                     this.player.activeMovement = Movement.Back
                 break;
                 case "ArrowRight":
-                    console.log('destra');
+                   // console.log('destra');
                     this.player.activeMovement = Movement.Right;
                 break;
                 case "ArrowLeft":
-                    console.log('sinistra');
+                  //  console.log('sinistra');
                     this.player.activeMovement = Movement.Left;
                 break;
             }
